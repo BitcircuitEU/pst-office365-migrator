@@ -34,17 +34,20 @@ User.ReadWrite.All
 - Install Dependencies `npm install`
 - Run Script `npm start`
 
-!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+> Currently the pst-extractor library has some missing exports, to fix this open the following file after running npm install.
+> - Open node_modules/pst-extractor/dist/index.d.ts
+> - Add following to end of file:
 ```
-Currently the pst-extractor library has some missing exports, to fix this open the following file after running npm install.
-- Open node_modules/pst-extractor/dist/index.d.ts
-- Add following to end of file:
 export { PSTAttachment } from './PSTAttachment.class';
 export { PSTNodeInputStream } from './PSTNodeInputStream.class';
 export { PSTContact } from './PSTContact.class';
 export { PSTAppointment } from './PSTAppointment.class';
+```
 
-- Also replace the getNextChild Function in PSTFolder.class.js in same directory as it has a bug which may not itterate through all items
+> Also replace the getNextChild Function in PSTFolder.class.js in same directory as it has a bug which may not itterate through all items
+```
 getNextChild() {
     this.initEmailsTable();
     if (this.emailsTable) {
