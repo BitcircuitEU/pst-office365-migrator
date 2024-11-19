@@ -43,6 +43,57 @@ export { PSTAttachment } from './PSTAttachment.class';
 export { PSTNodeInputStream } from './PSTNodeInputStream.class';
 export { PSTContact } from './PSTContact.class';
 export { PSTAppointment } from './PSTAppointment.class';
+
+- Also replace the getNextChild Function in PSTFolder.class.js in same directory as it has a bug which may not itterate through all items
+getNextChild() {
+    this.initEmailsTable();
+    if (this.emailsTable) {
+        if (this.currentEmailIndex >= this.contentCount) {
+            //console.log(`[DEBUG] Reached end of content. Index: ${this.currentEmailIndex}, Count: ${this.contentCount}`);
+            return null;
+        }
+        
+        // get the emails from the rows in the main email table
+        const rows = this.emailsTable.getItems(this.currentEmailIndex, 1);
+        //console.log(`[DEBUG] Retrieved row for index ${this.currentEmailIndex}`);
+        
+        if (rows.length === 0) {
+            //console.log(`[DEBUG] No rows retrieved for index ${this.currentEmailIndex}`);
+            this.currentEmailIndex++;
+            return this.getNextChild();
+        }
+        
+        const emailRow = rows[0].get(0x67f2);
+        if (!emailRow || emailRow.itemIndex === -1) {
+            //console.log(`[DEBUG] Invalid email row for index ${this.currentEmailIndex}`);
+            this.currentEmailIndex++;
+            return this.getNextChild();
+        }
+        
+        //console.log(`[DEBUG] Attempting to load child for index ${this.currentEmailIndex}`);
+        try {
+            const childDescriptor = this.pstFile.getDescriptorIndexNode(long_1.default.fromNumber(emailRow.entryValueReference));
+            const child = PSTUtil_class_1.PSTUtil.detectAndLoadPSTObject(this.pstFile, childDescriptor);
+            this.currentEmailIndex++;
+            return child;
+        } catch (err) {
+            //console.error(`[ERROR] Failed to load child for index ${this.currentEmailIndex}:`, err);
+            this.currentEmailIndex++;
+            return this.getNextChild();
+        }
+    } else if (this.fallbackEmailsTable) {
+        if (this.currentEmailIndex >= this.contentCount ||
+            this.currentEmailIndex >= this.fallbackEmailsTable.length) {
+            // no more!
+            return null;
+        }
+        const childDescriptor = this.fallbackEmailsTable[this.currentEmailIndex];
+        const child = PSTUtil_class_1.PSTUtil.detectAndLoadPSTObject(this.pstFile, childDescriptor);
+        this.currentEmailIndex++;
+        return child;
+    }
+    return null;
+}
 ```
 
 > We might compile a binary .exe File to use without NodeJs later.
